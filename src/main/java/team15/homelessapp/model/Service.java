@@ -1,6 +1,8 @@
 package team15.homelessapp.model;
 
 import javax.persistence.*;
+import team15.homelessapp.model.City;
+import team15.homelessapp.model.ServiceCategory;
 
 @Entity
 @Table(name = "Service")
@@ -21,7 +23,7 @@ public class Service {
 
     @ManyToOne
     @JoinColumn(name = "category_ID", nullable = false)
-    private ServiceCategory serviceCategory;
+    private ServiceCategory category;
 
     // Getters and Setters
 
@@ -73,11 +75,11 @@ public class Service {
         this.city = city;
     }
 
-    public ServiceCategory getServiceCategory() {
-        return serviceCategory;
+    public ServiceCategory getCategory() {
+        return category;
     }
 
-    public void setServiceCategory(ServiceCategory serviceCategory) {
-        this.serviceCategory = serviceCategory;
+    public void setCategory(ServiceCategory category) {
+        this.category = category;
     }
 }
