@@ -37,7 +37,7 @@ public class Menu {
                 System.out.println("Select a category:");
                 System.out.println("1. Service CRUD Operations");
                 System.out.println("2. Service Category CRUD Operations");
-                System.out.println("3. Create City");
+                System.out.println("3. City CRUD Operations");
                 System.out.println("4. Exit");
                 System.out.print("Select an option: ");
                 int choice = scanner.nextInt();
@@ -50,7 +50,7 @@ public class Menu {
                         showServiceCategoryOperations(scanner);
                         break;
                     case 3:
-                        createCity();
+                        showCityOperations(scanner);
                         break;
                     case 4:
                         HibernateUtil.shutdown();
@@ -59,6 +59,7 @@ public class Menu {
                     default:
                         System.out.println("Invalid choice. Try again.");
                 }
+
             }
         }
     }
@@ -116,6 +117,34 @@ public class Menu {
                 System.out.println("Invalid choice. Returning to main menu.");
         }
     }
+
+    private void showCityOperations(Scanner scanner) {
+        System.out.println("City CRUD Operations:");
+        System.out.println("1. Create City");
+        System.out.println("2. View All Cities");
+        System.out.println("3. Update City");
+        System.out.println("4. Delete City");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createCity();
+                break;
+            case 2:
+                viewAllCities();
+                break;
+            case 3:
+                updateCity();
+                break;
+            case 4:
+                deleteCity();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
 
     public void setupDatabase() {
         System.out.println("Setting up the database...");
@@ -367,6 +396,69 @@ public class Menu {
         tx.commit();
         session.close();
         System.out.println("City Created Successfully!");
+    }
+
+    public void viewAllCities() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<City> cities = session.createQuery("from City", City.class).list();
+        session.close();
+
+        if (cities.isEmpty()) {
+            System.out.println("No cities found.");
+        } else {
+            System.out.println("Cities:");
+            for (City city : cities) {
+                System.out.println("ID: " + city.getCity_ID() + ", Name: " + city.getCity_name());
+            }
+        }
+    }
+
+    public void updateCity() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter City ID to update: ");
+        int cityId = scanner.nextInt();
+        scanner.nextLine();  // Consume newline
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        City city = session.get(City.class, cityId);
+
+        if (city == null) {
+            System.out.println("City with ID " + cityId + " not found.");
+            session.close();
+            return;
+        }
+
+        System.out.print("Enter new City Name (current: " + city.getCity_name() + "): ");
+        String newName = scanner.nextLine();
+
+        city.setCity_name(newName);
+
+        Transaction tx = session.beginTransaction();
+        session.update(city);
+        tx.commit();
+        session.close();
+        System.out.println("City Updated Successfully!");
+    }
+
+    public void deleteCity() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter City ID to delete: ");
+        int cityId = scanner.nextInt();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        City city = session.get(City.class, cityId);
+
+        if (city == null) {
+            System.out.println("City with ID " + cityId + " not found.");
+            session.close();
+            return;
+        }
+
+        Transaction tx = session.beginTransaction();
+        session.delete(city);
+        tx.commit();
+        session.close();
+        System.out.println("City Deleted Successfully!");
     }
 
     private List<City> getAllCities() {
