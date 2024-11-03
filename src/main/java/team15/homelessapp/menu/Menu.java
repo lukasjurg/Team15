@@ -11,7 +11,7 @@ import team15.homelessapp.model.ServiceCategory;
 
 public class Menu {
 
-    private boolean isDatabaseSetup = false;  // Flag to track if database setup is complete
+    private boolean isDatabaseSetup = false;
 
     public void showMenu() {
         Scanner scanner = new Scanner(System.in);
@@ -24,7 +24,7 @@ public class Menu {
 
                 switch (choice) {
                     case 1:
-                        setupDatabase();  // Call method to setup database
+                        setupDatabase();
                         break;
                     case 2:
                         HibernateUtil.shutdown();
@@ -34,48 +34,25 @@ public class Menu {
                         System.out.println("Invalid choice. Try again.");
                 }
             } else {
-                System.out.println("1. Create Service Category");
-                System.out.println("2. View All Service Categories");
-                System.out.println("3. Update Service Category");
-                System.out.println("4. Delete Service Category");
-                System.out.println("5. Create Service");
-                System.out.println("6. View All Services");
-                System.out.println("7. Update Service");
-                System.out.println("8. Delete Service");
-                System.out.println("9. Create City");
-                System.out.println("10. Exit");
+                System.out.println("Select a category:");
+                System.out.println("1. Service CRUD Operations");
+                System.out.println("2. Service Category CRUD Operations");
+                System.out.println("3. Create City");
+                System.out.println("4. Exit");
                 System.out.print("Select an option: ");
                 int choice = scanner.nextInt();
 
                 switch (choice) {
                     case 1:
-                        createServiceCategory();
+                        showServiceOperations(scanner);
                         break;
                     case 2:
-                        viewAllServiceCategories();
+                        showServiceCategoryOperations(scanner);
                         break;
                     case 3:
-                        updateServiceCategory();
-                        break;
-                    case 4:
-                        deleteServiceCategory();
-                        break;
-                    case 5:
-                        createService();
-                        break;
-                    case 6:
-                        viewAllServices();
-                        break;
-                    case 7:
-                        updateService();
-                        break;
-                    case 8:
-                        deleteService();
-                        break;
-                    case 9:
                         createCity();
                         break;
-                    case 10:
+                    case 4:
                         HibernateUtil.shutdown();
                         System.exit(0);
                         break;
@@ -86,7 +63,60 @@ public class Menu {
         }
     }
 
-    // -------------------- Database Setup --------------------
+    private void showServiceOperations(Scanner scanner) {
+        System.out.println("Service CRUD Operations:");
+        System.out.println("1. Create Service");
+        System.out.println("2. View All Services");
+        System.out.println("3. Update Service");
+        System.out.println("4. Delete Service");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createService();
+                break;
+            case 2:
+                viewAllServices();
+                break;
+            case 3:
+                updateService();
+                break;
+            case 4:
+                deleteService();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
+    private void showServiceCategoryOperations(Scanner scanner) {
+        System.out.println("Service Category CRUD Operations:");
+        System.out.println("1. Create Service Category");
+        System.out.println("2. View All Service Categories");
+        System.out.println("3. Update Service Category");
+        System.out.println("4. Delete Service Category");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createServiceCategory();
+                break;
+            case 2:
+                viewAllServiceCategories();
+                break;
+            case 3:
+                updateServiceCategory();
+                break;
+            case 4:
+                deleteServiceCategory();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
     public void setupDatabase() {
         System.out.println("Setting up the database...");
         Session session = HibernateUtil.getSessionFactory().openSession();
@@ -94,10 +124,8 @@ public class Menu {
         tx.commit();
         session.close();
         System.out.println("Database setup complete!");
-        isDatabaseSetup = true;  // Mark database as setup
+        isDatabaseSetup = true;
     }
-
-    // Service Category CRUD
 
     public void createServiceCategory() {
         Scanner scanner = new Scanner(System.in);
@@ -138,7 +166,7 @@ public class Menu {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter Service Category ID to update: ");
         int categoryId = scanner.nextInt();
-        scanner.nextLine();  // Consume newline
+        scanner.nextLine();
 
         Session session = HibernateUtil.getSessionFactory().openSession();
         ServiceCategory category = session.get(ServiceCategory.class, categoryId);
@@ -185,8 +213,6 @@ public class Menu {
         System.out.println("Service Category Deleted Successfully!");
     }
 
-    // Service CRUD Operations
-
     public void createService() {
         Scanner scanner = new Scanner(System.in);
 
@@ -228,7 +254,6 @@ public class Menu {
             return;
         }
 
-        // Create Service
         System.out.print("Enter Service Name: ");
         String name = scanner.nextLine();
         System.out.print("Enter Service Address: ");
@@ -328,7 +353,6 @@ public class Menu {
         System.out.println("Service Deleted Successfully!");
     }
 
-    // City Creation
     public void createCity() {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter City Name: ");
@@ -344,8 +368,6 @@ public class Menu {
         session.close();
         System.out.println("City Created Successfully!");
     }
-
-    // Helper Methods
 
     private List<City> getAllCities() {
         Session session = HibernateUtil.getSessionFactory().openSession();
