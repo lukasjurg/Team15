@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Scanner;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import team15.homelessapp.model.*;
 import team15.homelessapp.util.HibernateUtil;
-import team15.homelessapp.model.Service;
-import team15.homelessapp.model.City;
-import team15.homelessapp.model.ServiceCategory;
 
 public class Menu {
 
@@ -38,7 +36,9 @@ public class Menu {
                 System.out.println("1. Service CRUD Operations");
                 System.out.println("2. Service Category CRUD Operations");
                 System.out.println("3. City CRUD Operations");
-                System.out.println("4. Exit");
+                System.out.println("4. User CRUD Operations");
+                System.out.println("5. Role CRUD Operations");
+                System.out.println("6. Exit");
                 System.out.print("Select an option: ");
                 int choice = scanner.nextInt();
 
@@ -53,12 +53,20 @@ public class Menu {
                         showCityOperations(scanner);
                         break;
                     case 4:
+                        showUserOperations(scanner);
+                        break;
+                    case 5:
+                        showRoleOperations(scanner);
+                        break;
+                    case 6:
                         HibernateUtil.shutdown();
                         System.exit(0);
                         break;
                     default:
                         System.out.println("Invalid choice. Try again.");
                 }
+
+
 
             }
         }
@@ -145,6 +153,59 @@ public class Menu {
         }
     }
 
+    private void showUserOperations(Scanner scanner) {
+        System.out.println("User CRUD Operations:");
+        System.out.println("1. Create User");
+        System.out.println("2. View All Users");
+        System.out.println("3. Update User");
+        System.out.println("4. Delete User");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createUser();
+                break;
+            case 2:
+                viewAllUsers();
+                break;
+            case 3:
+                updateUser();
+                break;
+            case 4:
+                deleteUser();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
+    private void showRoleOperations(Scanner scanner) {
+        System.out.println("Role CRUD Operations:");
+        System.out.println("1. Create Role");
+        System.out.println("2. View All Roles");
+        System.out.println("3. Update Role");
+        System.out.println("4. Delete Role");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createRole();
+                break;
+            case 2:
+                viewAllRoles();
+                break;
+            case 3:
+                updateRole();
+                break;
+            case 4:
+                deleteRole();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
 
     public void setupDatabase() {
         System.out.println("Setting up the database...");
@@ -461,6 +522,213 @@ public class Menu {
         System.out.println("City Deleted Successfully!");
     }
 
+    public void createUser() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter Password: ");
+        String password = scanner.nextLine();
+        System.out.print("Enter Email: ");
+        String email = scanner.nextLine();
+
+        List<UserRole> roles = getAllRoles();
+        if (roles.isEmpty()) {
+            System.out.println("No roles available. Please create a role first.");
+            return;
+        }
+        System.out.println("Available Roles:");
+        for (UserRole role : roles) {
+            System.out.println("ID: " + role.getRole_ID() + ", Name: " + role.getRole_name());
+        }
+        System.out.print("Select Role ID: ");
+        int roleId = scanner.nextInt();
+        scanner.nextLine();
+
+        UserRole selectedRole = getRoleById(roleId);
+        if (selectedRole == null) {
+            System.out.println("Invalid Role ID.");
+            return;
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setEmail(email);
+        user.setRole(selectedRole);
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(user);
+        tx.commit();
+        session.close();
+        System.out.println("User Created Successfully!");
+    }
+
+    public void viewAllUsers() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<User> users = session.createQuery("from User", User.class).list();
+        session.close();
+
+        if (users.isEmpty()) {
+            System.out.println("No users found.");
+        } else {
+            System.out.println("Users:");
+            for (User user : users) {
+                System.out.println("ID: " + user.getUser_ID() + ", Username: " + user.getUsername() +
+                        ", Email: " + user.getEmail() + ", Role: " + user.getRole().getRole_name());
+            }
+        }
+    }
+
+    public void updateUser() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter User ID to update: ");
+        int userId = scanner.nextInt();
+        scanner.nextLine();  // Consume newline
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        User user = session.get(User.class, userId);
+
+        if (user == null) {
+            System.out.println("User with ID " + userId + " not found.");
+            session.close();
+            return;
+        }
+
+        System.out.print("Enter new Username (current: " + user.getUsername() + "): ");
+        String newUsername = scanner.nextLine();
+        System.out.print("Enter new Password (current: " + user.getPassword() + "): ");
+        String newPassword = scanner.nextLine();
+        System.out.print("Enter new Email (current: " + user.getEmail() + "): ");
+        String newEmail = scanner.nextLine();
+
+        List<UserRole> roles = getAllRoles();
+        System.out.println("Available Roles:");
+        for (UserRole role : roles) {
+            System.out.println("ID: " + role.getRole_ID() + ", Name: " + role.getRole_name());
+        }
+        System.out.print("Select Role ID (current: " + user.getRole().getRole_name() + "): ");
+        int roleId = scanner.nextInt();
+        scanner.nextLine();
+
+        UserRole selectedRole = getRoleById(roleId);
+        if (selectedRole == null) {
+            System.out.println("Invalid Role ID.");
+            return;
+        }
+
+        user.setUsername(newUsername);
+        user.setPassword(newPassword);
+        user.setEmail(newEmail);
+        user.setRole(selectedRole);
+
+        Transaction tx = session.beginTransaction();
+        session.update(user);
+        tx.commit();
+        session.close();
+        System.out.println("User Updated Successfully!");
+    }
+
+    public void deleteUser() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter User ID to delete: ");
+        int userId = scanner.nextInt();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        User user = session.get(User.class, userId);
+
+        if (user == null) {
+            System.out.println("User with ID " + userId + " not found.");
+            session.close();
+            return;
+        }
+
+        Transaction tx = session.beginTransaction();
+        session.delete(user);
+        tx.commit();
+        session.close();
+        System.out.println("User Deleted Successfully!");
+    }
+
+    public void createRole() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Role Name: ");
+        String roleName = scanner.nextLine();
+
+        UserRole role = new UserRole();
+        role.setRole_name(roleName);
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(role);
+        tx.commit();
+        session.close();
+        System.out.println("Role Created Successfully!");
+    }
+
+    public void viewAllRoles() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<UserRole> roles = session.createQuery("from UserRole", UserRole.class).list();
+        session.close();
+
+        if (roles.isEmpty()) {
+            System.out.println("No roles found.");
+        } else {
+            System.out.println("Roles:");
+            for (UserRole role : roles) {
+                System.out.println("ID: " + role.getRole_ID() + ", Name: " + role.getRole_name());
+            }
+        }
+    }
+
+    public void updateRole() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Role ID to update: ");
+        int roleId = scanner.nextInt();
+        scanner.nextLine();  // Consume newline
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        UserRole role = session.get(UserRole.class, roleId);
+
+        if (role == null) {
+            System.out.println("Role with ID " + roleId + " not found.");
+            session.close();
+            return;
+        }
+
+        System.out.print("Enter new Role Name (current: " + role.getRole_name() + "): ");
+        String newRoleName = scanner.nextLine();
+
+        role.setRole_name(newRoleName);
+
+        Transaction tx = session.beginTransaction();
+        session.update(role);
+        tx.commit();
+        session.close();
+        System.out.println("Role Updated Successfully!");
+    }
+
+    public void deleteRole() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Role ID to delete: ");
+        int roleId = scanner.nextInt();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        UserRole role = session.get(UserRole.class, roleId);
+
+        if (role == null) {
+            System.out.println("Role with ID " + roleId + " not found.");
+            session.close();
+            return;
+        }
+
+        Transaction tx = session.beginTransaction();
+        session.delete(role);
+        tx.commit();
+        session.close();
+        System.out.println("Role Deleted Successfully!");
+    }
+
     private List<City> getAllCities() {
         Session session = HibernateUtil.getSessionFactory().openSession();
         List<City> cities = session.createQuery("from City", City.class).list();
@@ -488,4 +756,20 @@ public class Menu {
         session.close();
         return category;
     }
+
+    private List<UserRole> getAllRoles() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<UserRole> roles = session.createQuery("from UserRole", UserRole.class).list();
+        session.close();
+        return roles;
+    }
+
+    private UserRole getRoleById(int roleId) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        UserRole role = session.get(UserRole.class, roleId);
+        session.close();
+        return role;
+    }
+
+
 }

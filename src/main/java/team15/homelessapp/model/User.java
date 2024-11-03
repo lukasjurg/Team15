@@ -12,7 +12,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "role_ID", nullable = false)
-    private UserRole userRole;
+    private UserRole role;
 
     private String username;
     private String password;
@@ -28,12 +28,12 @@ public class User {
         this.user_ID = user_ID;
     }
 
-    public UserRole getUserRole() {
-        return userRole;
+    public UserRole getRole() {
+        return role;
     }
 
-    public void setUserRole(UserRole userRole) {
-        this.userRole = userRole;
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
     public String getUsername() {
