@@ -1,11 +1,14 @@
 package team15.homelessapp.menu;
 
-import java.util.List;
-import java.util.Scanner;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import team15.homelessapp.model.*;
 import team15.homelessapp.util.HibernateUtil;
+
+import java.util.List;
+import java.util.Scanner;
+
 
 public class Menu {
 
@@ -39,7 +42,8 @@ public class Menu {
                 System.out.println("4. User CRUD Operations");
                 System.out.println("5. Role CRUD Operations");
                 System.out.println("6. Feedback CRUD Operations");
-                System.out.println("7. Exit");
+                System.out.println("7. Other Operations");
+                System.out.println("8. Exit");
                 System.out.print("Select an option: ");
                 int choice = scanner.nextInt();
 
@@ -63,6 +67,9 @@ public class Menu {
                         showFeedbackOperations(scanner);
                         break;
                     case 7:
+                        showOtherOperations(scanner);
+                        break;
+                    case 8:
                         HibernateUtil.shutdown();
                         System.exit(0);
                         break;
@@ -232,6 +239,25 @@ public class Menu {
                 break;
             case 4:
                 deleteFeedback();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
+    private void showOtherOperations(Scanner scanner) {
+        System.out.println("Other Operations:");
+        System.out.println("1. Get Average Rating for Each Service");
+        System.out.println("2. Search Services by City");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                getAverageRatingForEachService();
+                break;
+            case 2:
+                searchServicesByCity();
                 break;
             default:
                 System.out.println("Invalid choice. Returning to main menu.");
@@ -888,6 +914,58 @@ public class Menu {
         session.close();
         System.out.println("Feedback Deleted Successfully!");
     }
+
+    private void getAverageRatingForEachService() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+
+        String hql = "SELECT s.name, AVG(f.rating) " +
+                "FROM Service s JOIN Feedback f ON s.service_ID = f.service.service_ID " +
+                "GROUP BY s.service_ID, s.name";
+        Query<Object[]> query = session.createQuery(hql, Object[].class); // Using org.hibernate.query.Query here
+        List<Object[]> results = query.list();
+
+        session.close();
+
+        if (results.isEmpty()) {
+            System.out.println("No ratings found for any services.");
+        } else {
+            System.out.println("Average Rating for Each Service:");
+            for (Object[] row : results) {
+                String serviceName = (String) row[0];
+                Double avgRating = (Double) row[1];
+                System.out.println("Service: " + serviceName + ", Average Rating: " + avgRating);
+            }
+        }
+    }
+
+    private void searchServicesByCity() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter City Name to search for services: ");
+        String cityName = scanner.nextLine();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+
+        // Query to find services in the specified city
+        String hql = "FROM Service s WHERE s.city.city_name = :cityName";
+        Query<Service> query = session.createQuery(hql, Service.class);
+        query.setParameter("cityName", cityName);
+
+        List<Service> services = query.getResultList();
+        session.close();
+
+        if (services.isEmpty()) {
+            System.out.println("No services found in the city: " + cityName);
+        } else {
+            System.out.println("Services in " + cityName + ":");
+            for (Service service : services) {
+                System.out.println("ID: " + service.getService_ID() + ", Name: " + service.getName() +
+                        ", Address: " + service.getAddress() +
+                        ", Contact: " + service.getContact_number() +
+                        ", Operating Hours: " + service.getOperating_hours());
+            }
+        }
+    }
+
 
 
     private List<City> getAllCities() {
