@@ -38,7 +38,8 @@ public class Menu {
                 System.out.println("3. City CRUD Operations");
                 System.out.println("4. User CRUD Operations");
                 System.out.println("5. Role CRUD Operations");
-                System.out.println("6. Exit");
+                System.out.println("6. Feedback CRUD Operations");
+                System.out.println("7. Exit");
                 System.out.print("Select an option: ");
                 int choice = scanner.nextInt();
 
@@ -59,6 +60,9 @@ public class Menu {
                         showRoleOperations(scanner);
                         break;
                     case 6:
+                        showFeedbackOperations(scanner);
+                        break;
+                    case 7:
                         HibernateUtil.shutdown();
                         System.exit(0);
                         break;
@@ -201,6 +205,33 @@ public class Menu {
                 break;
             case 4:
                 deleteRole();
+                break;
+            default:
+                System.out.println("Invalid choice. Returning to main menu.");
+        }
+    }
+
+    private void showFeedbackOperations(Scanner scanner) {
+        System.out.println("Feedback CRUD Operations:");
+        System.out.println("1. Create Feedback");
+        System.out.println("2. View All Feedback");
+        System.out.println("3. Update Feedback");
+        System.out.println("4. Delete Feedback");
+        System.out.print("Select an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                createFeedback();
+                break;
+            case 2:
+                viewAllFeedback();
+                break;
+            case 3:
+                updateFeedback();
+                break;
+            case 4:
+                deleteFeedback();
                 break;
             default:
                 System.out.println("Invalid choice. Returning to main menu.");
@@ -729,6 +760,136 @@ public class Menu {
         System.out.println("Role Deleted Successfully!");
     }
 
+    public void createFeedback() {
+        Scanner scanner = new Scanner(System.in);
+
+        // Select User
+        List<User> users = getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users available. Please create a user first.");
+            return;
+        }
+        System.out.println("Available Users:");
+        for (User user : users) {
+            System.out.println("ID: " + user.getUser_ID() + ", Username: " + user.getUsername());
+        }
+        System.out.print("Select User ID: ");
+        int userId = scanner.nextInt();
+        scanner.nextLine();
+
+        User selectedUser = getUserById(userId);
+        if (selectedUser == null) {
+            System.out.println("Invalid User ID.");
+            return;
+        }
+
+        // Select Service
+        List<Service> services = getAllServices();
+        if (services.isEmpty()) {
+            System.out.println("No services available. Please create a service first.");
+            return;
+        }
+        System.out.println("Available Services:");
+        for (Service service : services) {
+            System.out.println("ID: " + service.getService_ID() + ", Name: " + service.getName());
+        }
+        System.out.print("Select Service ID: ");
+        int serviceId = scanner.nextInt();
+        scanner.nextLine();
+
+        Service selectedService = getServiceById(serviceId);
+        if (selectedService == null) {
+            System.out.println("Invalid Service ID.");
+            return;
+        }
+
+        // Enter Rating
+        System.out.print("Enter Rating (1-5): ");
+        int rating = scanner.nextInt();
+        scanner.nextLine();
+
+        // Create Feedback
+        Feedback feedback = new Feedback();
+        feedback.setUser(selectedUser);
+        feedback.setService(selectedService);
+        feedback.setRating(rating);
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(feedback);
+        tx.commit();
+        session.close();
+        System.out.println("Feedback Created Successfully!");
+    }
+
+    public void viewAllFeedback() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<Feedback> feedbackList = session.createQuery("from Feedback", Feedback.class).list();
+        session.close();
+
+        if (feedbackList.isEmpty()) {
+            System.out.println("No feedback found.");
+        } else {
+            System.out.println("Feedback Entries:");
+            for (Feedback feedback : feedbackList) {
+                System.out.println("ID: " + feedback.getFeedback_ID() +
+                        ", User: " + feedback.getUser().getUsername() +
+                        ", Service: " + feedback.getService().getName() +
+                        ", Rating: " + feedback.getRating());
+            }
+        }
+    }
+
+    public void updateFeedback() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Feedback ID to update: ");
+        int feedbackId = scanner.nextInt();
+        scanner.nextLine();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Feedback feedback = session.get(Feedback.class, feedbackId);
+
+        if (feedback == null) {
+            System.out.println("Feedback with ID " + feedbackId + " not found.");
+            session.close();
+            return;
+        }
+
+        System.out.print("Enter new Rating (1-5, current: " + feedback.getRating() + "): ");
+        int newRating = scanner.nextInt();
+        scanner.nextLine();
+
+        feedback.setRating(newRating);
+
+        Transaction tx = session.beginTransaction();
+        session.update(feedback);
+        tx.commit();
+        session.close();
+        System.out.println("Feedback Updated Successfully!");
+    }
+
+    public void deleteFeedback() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Feedback ID to delete: ");
+        int feedbackId = scanner.nextInt();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Feedback feedback = session.get(Feedback.class, feedbackId);
+
+        if (feedback == null) {
+            System.out.println("Feedback with ID " + feedbackId + " not found.");
+            session.close();
+            return;
+        }
+
+        Transaction tx = session.beginTransaction();
+        session.delete(feedback);
+        tx.commit();
+        session.close();
+        System.out.println("Feedback Deleted Successfully!");
+    }
+
+
     private List<City> getAllCities() {
         Session session = HibernateUtil.getSessionFactory().openSession();
         List<City> cities = session.createQuery("from City", City.class).list();
@@ -771,5 +932,31 @@ public class Menu {
         return role;
     }
 
+    private List<User> getAllUsers() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<User> users = session.createQuery("from User", User.class).list();
+        session.close();
+        return users;
+    }
 
+    private User getUserById(int userId) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        User user = session.get(User.class, userId);
+        session.close();
+        return user;
+    }
+
+    private Service getServiceById(int serviceId) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Service service = session.get(Service.class, serviceId);
+        session.close();
+        return service;
+    }
+
+    private List<Service> getAllServices() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<Service> services = session.createQuery("from Service", Service.class).list();
+        session.close();
+        return services;
+    }
 }
