@@ -39,7 +39,7 @@ public class UserController {
                     user.setUsername(updatedUser.getUsername());
                     user.setPassword(updatedUser.getPassword());
                     user.setEmail(updatedUser.getEmail());
-                    user.setUserRole(updatedUser.getUserRole());
+                    user.setRole(updatedUser.getRole());  // Corrected to match current field name
                     return ResponseEntity.ok(userRepository.save(user));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

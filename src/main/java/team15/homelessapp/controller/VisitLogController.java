@@ -37,7 +37,9 @@ public class VisitLogController {
         return visitLogRepository.findById(id)
                 .map(log -> {
                     log.setUser(updatedVisitLog.getUser());
-                    log.setTimestamp(updatedVisitLog.getTimestamp());
+                    log.setService(updatedVisitLog.getService());
+                    log.setVisit_date(updatedVisitLog.getVisit_date());
+                    log.setVisit_notes(updatedVisitLog.getVisit_notes());
                     return ResponseEntity.ok(visitLogRepository.save(log));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
