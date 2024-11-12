@@ -1,12 +1,10 @@
 package team15.homelessapp.model;
 
 import javax.persistence.*;
-import team15.homelessapp.model.City;
-import team15.homelessapp.model.ServiceCategory;
 
 @Entity
 @Table(name = "Service")
-public class Service {
+public class AppService { // Renamed from 'Service'
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

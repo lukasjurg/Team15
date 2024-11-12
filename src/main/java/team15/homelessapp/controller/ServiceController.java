@@ -3,7 +3,7 @@ package team15.homelessapp.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import team15.homelessapp.model.Service;
+import team15.homelessapp.model.AppService;
 import team15.homelessapp.repos.ServiceRepository;
 
 import java.util.List;
@@ -17,23 +17,23 @@ public class ServiceController {
     private ServiceRepository serviceRepository;
 
     @GetMapping
-    public List<Service> getAllServices() {
+    public List<AppService> getAllServices() {
         return serviceRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Service> getServiceById(@PathVariable Integer id) {
-        Optional<Service> service = serviceRepository.findById(id);
+    public ResponseEntity<AppService> getServiceById(@PathVariable Integer id) {
+        Optional<AppService> service = serviceRepository.findById(id);
         return service.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Service createService(@RequestBody Service service) {
+    public AppService createService(@RequestBody AppService service) {
         return serviceRepository.save(service);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Service> updateService(@PathVariable Integer id, @RequestBody Service updatedService) {
+    public ResponseEntity<AppService> updateService(@PathVariable Integer id, @RequestBody AppService updatedService) {
         return serviceRepository.findById(id)
                 .map(serv -> {
                     serv.setName(updatedService.getName());

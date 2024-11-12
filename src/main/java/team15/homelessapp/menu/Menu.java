@@ -1,4 +1,4 @@
-package team15.homelessapp.menu;
+/*package team15.homelessapp.menu;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -1038,3 +1038,4 @@ public class Menu {
         return services;
     }
 }
+*/
