@@ -2,11 +2,12 @@ package team15.homelessapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import team15.homelessapp.exceptions.ResourceNotFoundException;
+import team15.homelessapp.exceptions.DatabaseException;
 import team15.homelessapp.model.Feedback;
 import team15.homelessapp.repos.FeedbackRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FeedbackService {
@@ -14,32 +15,50 @@ public class FeedbackService {
     @Autowired
     private FeedbackRepository feedbackRepository;
 
-    public List<Feedback> getAllFeedback() {
-        return feedbackRepository.findAll();
+    public List<Feedback> getAllFeedbacks() {
+        try {
+            return feedbackRepository.findAll();
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to fetch feedback", e);
+        }
     }
 
-    public Optional<Feedback> getFeedbackById(int id) {
-        return feedbackRepository.findById(id);
+    public Feedback getFeedbackById(int id) {
+        return feedbackRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Feedback with ID " + id + " not found"));
     }
 
     public Feedback createFeedback(Feedback feedback) {
-        return feedbackRepository.save(feedback);
-    }
-
-    public Optional<Feedback> updateFeedback(int id, Feedback updatedFeedback) {
-        return feedbackRepository.findById(id).map(feedback -> {
-            feedback.setRating(updatedFeedback.getRating());
-            feedback.setService(updatedFeedback.getService());
-            feedback.setUser(updatedFeedback.getUser());
+        try {
             return feedbackRepository.save(feedback);
-        });
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to save feedback", e);
+        }
     }
 
-    public boolean deleteFeedback(int id) {
-        if (feedbackRepository.existsById(id)) {
-            feedbackRepository.deleteById(id);
-            return true;
+    public Feedback updateFeedback(int id, Feedback updatedFeedback) {
+        return feedbackRepository.findById(id)
+                .map(feedback -> {
+                    feedback.setUser(updatedFeedback.getUser());
+                    feedback.setService(updatedFeedback.getService());
+                    feedback.setRating(updatedFeedback.getRating());
+                    try {
+                        return feedbackRepository.save(feedback);
+                    } catch (Exception e) {
+                        throw new DatabaseException("Failed to update feedback", e);
+                    }
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Feedback with ID " + id + " not found"));
+    }
+
+    public void deleteFeedback(int id) {
+        if (!feedbackRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Feedback with ID " + id + " not found");
         }
-        return false;
+        try {
+            feedbackRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to delete feedback", e);
+        }
     }
 }

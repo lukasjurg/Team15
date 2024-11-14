@@ -2,11 +2,12 @@ package team15.homelessapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import team15.homelessapp.exceptions.ResourceNotFoundException;
+import team15.homelessapp.exceptions.DatabaseException;
 import team15.homelessapp.model.User;
 import team15.homelessapp.repos.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -15,32 +16,50 @@ public class UserService {
     private UserRepository userRepository;
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        try {
+            return userRepository.findAll();
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to fetch users", e);
+        }
     }
 
-    public Optional<User> getUserById(int id) {
-        return userRepository.findById(id);
+    public User getUserById(int id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
     }
 
     public User createUser(User user) {
-        return userRepository.save(user);
-    }
-
-    public Optional<User> updateUser(int id, User updatedUser) {
-        return userRepository.findById(id).map(user -> {
-            user.setUsername(updatedUser.getUsername());
-            user.setPassword(updatedUser.getPassword());
-            user.setEmail(updatedUser.getEmail());
-            user.setRole(updatedUser.getRole());
+        try {
             return userRepository.save(user);
-        });
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to save user", e);
+        }
     }
 
-    public boolean deleteUser(int id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return true;
+    public User updateUser(int id, User updatedUser) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setUsername(updatedUser.getUsername());
+                    user.setPassword(updatedUser.getPassword());
+                    user.setEmail(updatedUser.getEmail());
+                    user.setRole(updatedUser.getRole());
+                    try {
+                        return userRepository.save(user);
+                    } catch (Exception e) {
+                        throw new DatabaseException("Failed to update user", e);
+                    }
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
+    }
+
+    public void deleteUser(int id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User with ID " + id + " not found");
         }
-        return false;
+        try {
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to delete user", e);
+        }
     }
 }

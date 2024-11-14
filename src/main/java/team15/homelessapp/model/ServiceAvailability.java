@@ -13,7 +13,7 @@ public class ServiceAvailability {
 
     @ManyToOne
     @JoinColumn(name = "service_ID", nullable = false)
-    private Service service;
+    private AppService service; // Updated to AppService
 
     private int available_slots;
 
@@ -30,11 +30,11 @@ public class ServiceAvailability {
         this.availability_ID = availability_ID;
     }
 
-    public Service getService() {
+    public AppService getService() { // Updated to AppService
         return service;
     }
 
-    public void setService(Service service) {
+    public void setService(AppService service) { // Updated to AppService
         this.service = service;
     }
 

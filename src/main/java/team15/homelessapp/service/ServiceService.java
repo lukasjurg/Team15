@@ -2,11 +2,12 @@ package team15.homelessapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import team15.homelessapp.exceptions.ResourceNotFoundException;
+import team15.homelessapp.exceptions.DatabaseException;
 import team15.homelessapp.model.AppService;
 import team15.homelessapp.repos.ServiceRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ServiceService {
@@ -15,18 +16,27 @@ public class ServiceService {
     private ServiceRepository serviceRepository;
 
     public List<AppService> getAllServices() {
-        return serviceRepository.findAll();
+        try {
+            return serviceRepository.findAll();
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to retrieve services", e);
+        }
     }
 
-    public Optional<AppService> getServiceById(int id) {
-        return serviceRepository.findById(id);
+    public AppService getServiceById(int id) {
+        return serviceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Service with ID " + id + " not found"));
     }
 
     public AppService createService(AppService service) {
-        return serviceRepository.save(service);
+        try {
+            return serviceRepository.save(service);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to create service", e);
+        }
     }
 
-    public Optional<AppService> updateService(int id, AppService updatedService) {
+    public AppService updateService(int id, AppService updatedService) {
         return serviceRepository.findById(id).map(service -> {
             service.setName(updatedService.getName());
             service.setAddress(updatedService.getAddress());
@@ -34,15 +44,22 @@ public class ServiceService {
             service.setOperating_hours(updatedService.getOperating_hours());
             service.setCity(updatedService.getCity());
             service.setCategory(updatedService.getCategory());
-            return serviceRepository.save(service);
-        });
+            try {
+                return serviceRepository.save(service);
+            } catch (Exception e) {
+                throw new DatabaseException("Failed to update service", e);
+            }
+        }).orElseThrow(() -> new ResourceNotFoundException("Service with ID " + id + " not found"));
     }
 
-    public boolean deleteService(int id) {
-        if (serviceRepository.existsById(id)) {
-            serviceRepository.deleteById(id);
-            return true;
+    public void deleteService(int id) {
+        if (!serviceRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Service with ID " + id + " not found");
         }
-        return false;
+        try {
+            serviceRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to delete service", e);
+        }
     }
 }

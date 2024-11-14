@@ -2,11 +2,12 @@ package team15.homelessapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import team15.homelessapp.exceptions.ResourceNotFoundException;
+import team15.homelessapp.exceptions.DatabaseException;
 import team15.homelessapp.model.City;
 import team15.homelessapp.repos.CityRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CityService {
@@ -15,29 +16,45 @@ public class CityService {
     private CityRepository cityRepository;
 
     public List<City> getAllCities() {
-        return cityRepository.findAll();
+        try {
+            return cityRepository.findAll();
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to retrieve cities", e);
+        }
     }
 
-    public Optional<City> getCityById(int id) {
-        return cityRepository.findById(id);
+    public City getCityById(int id) {
+        return cityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("City with ID " + id + " not found"));
     }
 
     public City createCity(City city) {
-        return cityRepository.save(city);
+        try {
+            return cityRepository.save(city);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to create city", e);
+        }
     }
 
-    public Optional<City> updateCity(int id, City updatedCity) {
+    public City updateCity(int id, City updatedCity) {
         return cityRepository.findById(id).map(city -> {
             city.setCity_name(updatedCity.getCity_name());
-            return cityRepository.save(city);
-        });
+            try {
+                return cityRepository.save(city);
+            } catch (Exception e) {
+                throw new DatabaseException("Failed to update city", e);
+            }
+        }).orElseThrow(() -> new ResourceNotFoundException("City with ID " + id + " not found"));
     }
 
-    public boolean deleteCity(int id) {
-        if (cityRepository.existsById(id)) {
-            cityRepository.deleteById(id);
-            return true;
+    public void deleteCity(int id) {
+        if (!cityRepository.existsById(id)) {
+            throw new ResourceNotFoundException("City with ID " + id + " not found");
         }
-        return false;
+        try {
+            cityRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to delete city", e);
+        }
     }
 }
