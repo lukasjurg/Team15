@@ -1,10 +1,12 @@
 package team15.homelessapp.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.persistence.*;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "Service")
-public class AppService { // Renamed from 'Service'
+public class AppService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,7 +15,12 @@ public class AppService { // Renamed from 'Service'
     private String name;
     private String address;
     private String contact_number;
-    private String operating_hours;
+
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime startTime;
+
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime endTime;
 
     @ManyToOne
     @JoinColumn(name = "city_ID", nullable = false)
@@ -57,12 +64,20 @@ public class AppService { // Renamed from 'Service'
         this.contact_number = contact_number;
     }
 
-    public String getOperating_hours() {
-        return operating_hours;
+    public LocalTime getStartTime() {
+        return startTime;
     }
 
-    public void setOperating_hours(String operating_hours) {
-        this.operating_hours = operating_hours;
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
     }
 
     public City getCity() {

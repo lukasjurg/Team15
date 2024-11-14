@@ -5,47 +5,49 @@ import org.springframework.stereotype.Service;
 import team15.homelessapp.exceptions.ResourceNotFoundException;
 import team15.homelessapp.exceptions.DatabaseException;
 import team15.homelessapp.model.AppService;
-import team15.homelessapp.repos.ServiceRepository;
+import team15.homelessapp.repos.AppServiceRepository;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
-public class ServiceService {
+public class AppServiceService {
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private AppServiceRepository appServiceRepository;
 
     public List<AppService> getAllServices() {
         try {
-            return serviceRepository.findAll();
+            return appServiceRepository.findAll();
         } catch (Exception e) {
             throw new DatabaseException("Failed to retrieve services", e);
         }
     }
 
     public AppService getServiceById(int id) {
-        return serviceRepository.findById(id)
+        return appServiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service with ID " + id + " not found"));
     }
 
     public AppService createService(AppService service) {
         try {
-            return serviceRepository.save(service);
+            return appServiceRepository.save(service);
         } catch (Exception e) {
             throw new DatabaseException("Failed to create service", e);
         }
     }
 
     public AppService updateService(int id, AppService updatedService) {
-        return serviceRepository.findById(id).map(service -> {
+        return appServiceRepository.findById(id).map(service -> {
             service.setName(updatedService.getName());
             service.setAddress(updatedService.getAddress());
             service.setContact_number(updatedService.getContact_number());
-            service.setOperating_hours(updatedService.getOperating_hours());
+            service.setStartTime(updatedService.getStartTime());
+            service.setEndTime(updatedService.getEndTime());
             service.setCity(updatedService.getCity());
             service.setCategory(updatedService.getCategory());
             try {
-                return serviceRepository.save(service);
+                return appServiceRepository.save(service);
             } catch (Exception e) {
                 throw new DatabaseException("Failed to update service", e);
             }
@@ -53,13 +55,23 @@ public class ServiceService {
     }
 
     public void deleteService(int id) {
-        if (!serviceRepository.existsById(id)) {
+        if (!appServiceRepository.existsById(id)) {
             throw new ResourceNotFoundException("Service with ID " + id + " not found");
         }
         try {
-            serviceRepository.deleteById(id);
+            appServiceRepository.deleteById(id);
         } catch (Exception e) {
             throw new DatabaseException("Failed to delete service", e);
+        }
+    }
+
+    public List<AppService> getServicesAvailableFrom9To2() {
+        LocalTime start = LocalTime.of(9, 0);
+        LocalTime end = LocalTime.of(14, 0);
+        try {
+            return appServiceRepository.findAvailableServicesWithinHours(start, end);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to retrieve available services within specified hours", e);
         }
     }
 }
